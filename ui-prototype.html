@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CorePulse 核心律动 · UI 原型 v5</title>
+<style>
+/* ==========================================================
+   CorePulse 核心律动 · UI 原型 v5
+   —— 温润质感 · 精密工具感 · 克制即高级
+   ========================================================== */
+:root {
+  /* 底色层级 */
+  --bg-base: #131316;
+  --bg-raised: #1a1a1f;
+  --bg-overlay: #222228;
+  --bg-inset: #0e0e11;
+
+  /* 边框 */
+  --border-subtle: rgba(255,255,255,0.06);
+  --border-default: rgba(255,255,255,0.09);
+  --border-hover: rgba(255,255,255,0.14);
+  --border-active: rgba(232,168,124,0.3);
+
+  /* 强调色 */
+  --accent: #e8a87c;
+  --accent-muted: #c48b60;
+  --accent-subtle: rgba(232,168,124,0.08);
+  --accent-border: rgba(232,168,124,0.15);
+
+  /* 语义色 */
+  --green: #6ee7b7;
+  --green-subtle: rgba(110,231,183,0.08);
+  --amber: #fcd34d;
+  --amber-subtle: rgba(252,211,77,0.08);
+  --red: #fca5a5;
+  --red-subtle: rgba(252,165,165,0.08);
+  --blue: #93c5fd;
+  --blue-subtle: rgba(147,197,253,0.08);
+
+  /* 文字 */
+  --text-primary: #edeae6;
+  --text-secondary: #a8a29e;
+  --text-tertiary: #6b6560;
+  --text-quaternary: #44403c;
+
+  /* 圆角 */
+  --r-xl: 16px;
+  --r-lg: 12px;
+  --r-md: 10px;
+  --r-sm: 8px;
+
+  /* 字体 */
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+
+  /* 过渡 */
+  --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; width: 100%; }
+
+body {
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(232,168,124,0.025), transparent),
+    radial-gradient(ellipse 60% 50% at 80% 90%, rgba(100,120,180,0.015), transparent),
+    var(--bg-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+::selection { background: rgba(232,168,124,0.2); color: #fff; }
+
+/* ===== 应用外壳 ===== */
+.app {
+  width: 100vw; height: 100vh;
+  display: flex; flex-direction: column;
+}
+
+/* ===== 顶部栏 ===== */
+.topbar {
+  height: 56px; padding: 0 24px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-base);
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.logo-badge {
+  width: 32px; height: 32px; border-radius: var(--r-sm);
+  background: linear-gradient(160deg, #e8a87c, #c48b60);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.logo-badge svg { width: 16px; height: 16px; color: #fff; }
+.brand-text .bn {
+  font-size: 15px; font-weight: 700; letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+.brand-text .bs {
+  font-size: 11px; color: var(--text-tertiary); margin-top: 1px;
+  font-weight: 400; letter-spacing: 0.01em;
+}
+
+.status-pill {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 11px; font-weight: 500; color: var(--text-secondary);
+  background: var(--bg-raised); border: 1px solid var(--border-subtle);
+  padding: 5px 14px; border-radius: 999px;
+}
+.status-pill .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px rgba(110,231,183,0.4);
+}
+
+.top-right { display: flex; align-items: center; gap: 14px; }
+.top-user { display: flex; align-items: center; gap: 10px; }
+.top-user .uname { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+.avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: linear-gradient(160deg, #e8a87c, #c48b60);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 12px; color: #fff;
+  cursor: pointer; transition: opacity var(--duration-fast) var(--ease);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.avatar:hover { opacity: 0.85; }
+
+/* ===== 主体 ===== */
+.body { flex: 1; display: flex; min-height: 0; }
+
+/* ===== 左侧栏（导航 + 会话历史 合并单栏） ===== */
+.sidebar {
+  width: 288px; flex-shrink: 0; min-height: 0;
+  border-right: 1px solid var(--border-subtle);
+  background: var(--bg-raised);
+  display: flex; flex-direction: column;
+}
+
+/* 导航区 */
+.side-nav { padding: 20px 12px 12px; flex-shrink: 0; }
+.nav-label {
+  font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-quaternary); padding: 0 14px; margin-bottom: 12px; font-weight: 600;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; margin-bottom: 2px; border-radius: var(--r-md);
+  color: var(--text-tertiary); font-size: 13px; font-weight: 500;
+  cursor: pointer; border: none; background: transparent;
+  transition: all var(--duration-fast) var(--ease);
+  text-align: left; position: relative; width: 100%;
+}
+.nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.6; transition: opacity var(--duration-fast); }
+.nav-item:hover { background: var(--bg-overlay); color: var(--text-secondary); }
+.nav-item:hover svg { opacity: 0.8; }
+.nav-item.active {
+  background: var(--accent-subtle); color: var(--accent); font-weight: 600;
+}
+.nav-item.active::before {
+  content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 18px; border-radius: 0 3px 3px 0;
+  background: var(--accent);
+}
+.nav-item.active svg { opacity: 1; }
+.nav-item .nav-badge {
+  margin-left: auto; font-size: 10px; font-weight: 600;
+  background: var(--accent-subtle); color: var(--accent);
+  padding: 2px 7px; border-radius: 999px; border: 1px solid var(--accent-border);
+}
+
+/* 会话历史区（仅会话视图显示） */
+.side-history {
+  flex: 1; min-height: 0; overflow-y: auto;
+  padding: 14px 12px 12px; margin-top: 4px;
+  border-top: 1px solid var(--border-subtle);
+  display: none; flex-direction: column;
+}
+.sidebar.chat-mode .side-history { display: flex; }
+.side-history .h-title {
+  font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-quaternary); font-weight: 600; margin-bottom: 14px; padding: 0 10px;
+}
+.side-history .btn-new {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px; margin-bottom: 12px; border-radius: var(--r-md);
+  background: linear-gradient(180deg, #e8a87c, #d4946a);
+  border: none; color: #1a1a1f; font-weight: 600; font-size: 12px; cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.15);
+  transition: all var(--duration-fast) var(--ease);
+}
+.side-history .btn-new:hover { filter: brightness(1.08); }
+.side-history .btn-new:active { filter: brightness(0.95); transform: translateY(1px); }
+.side-history .h-search {
+  background: var(--bg-inset); border: 1px solid var(--border-subtle);
+  border-radius: var(--r-sm); padding: 9px 12px; color: var(--text-primary);
+  font-size: 12px; outline: none; margin-bottom: 10px; width: 100%;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.12);
+  transition: border-color var(--duration-fast) var(--ease);
+}
+.side-history .h-search:focus { border-color: var(--border-active); }
+.side-history .h-item {
+  padding: 10px 12px; border-radius: var(--r-sm); font-size: 13px;
+  color: var(--text-tertiary); cursor: pointer; margin-bottom: 2px;
+  transition: all var(--duration-fast) var(--ease); line-height: 1.4;
+  border: 1px solid transparent; flex-shrink: 0;
+}
+.side-history .h-item:hover { background: var(--bg-overlay); color: var(--text-secondary); }
+.side-history .h-item.active { background: var(--accent-subtle); color: var(--accent); font-weight: 500; border-color: var(--accent-border); }
+.side-history .h-item .time { font-size: 10px; color: var(--text-quaternary); display: block; margin-top: 3px; }
+.side-history .h-foot { margin-top: auto; padding: 12px 10px 0; border-top: 1px solid var(--border-subtle); font-size: 11px; color: var(--text-quaternary); }
+
+/* 底部实时状态 */
+.side-foot {
+  flex-shrink: 0; margin-top: auto; padding: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+.sidebar.chat-mode .side-foot { border-top: none; }
+.mini-card {
+  background: var(--bg-overlay); border: 1px solid var(--border-subtle);
+  border-radius: var(--r-lg); padding: 16px;
+}
+.mini-card .mc-title {
+  font-size: 11px; font-weight: 600; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 7px; color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+.mini-card .mc-title .dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--green); box-shadow: 0 0 4px rgba(110,231,183,0.4);
+}
+.mini-meter {
+  height: 3px; border-radius: 999px; background: rgba(255,255,255,0.06);
+  overflow: hidden; margin: 4px 0 10px;
+}
+.mini-meter .fill { height: 100%; border-radius: 999px; background: var(--accent); transition: width 0.6s var(--ease); }
+.mini-meter .fill.green { background: var(--green); }
+.mini-meter .fill.amber { background: var(--amber); }
+.mini-card .mc-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-tertiary); }
+
+/* ===== 主内容 ===== */
+.main { flex: 1; min-width: 0; overflow-y: auto; padding: 40px 48px; }
+.view { display: none; animation: viewIn 200ms var(--ease); }
+.view.active { display: block; }
+.page-head { margin-bottom: 32px; }
+.page-title {
+  font-size: 28px; font-weight: 700; letter-spacing: -0.04em;
+  display: flex; align-items: center; gap: 14px; color: var(--text-primary);
+}
+.page-title .ico {
+  width: 36px; height: 36px; border-radius: var(--r-md);
+  background: var(--accent-subtle); color: var(--accent);
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--accent-border);
+}
+.page-title .ico svg { width: 18px; height: 18px; }
+.page-sub { color: var(--text-tertiary); font-size: 14px; margin-top: 8px; line-height: 1.6; }
+
+/* 卡片 */
+.card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-xl);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.03);
+  transition: border-color var(--duration-fast) var(--ease), transform var(--duration-fast) var(--ease);
+}
+.card:hover { border-color: var(--border-default); }
+.card-pad { padding: 28px 32px; }
+
+/* ===== 1. 会话 ===== */
+.chat-view { display: none; }
+.chat-view.active { display: flex; height: 100%; }
+.chat-main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; }
+.chat-scroll { flex: 1; overflow-y: auto; padding: 32px 40px; display: flex; flex-direction: column; gap: 24px; }
+.msg { display: flex; flex-direction: column; max-width: 70%; animation: msgIn 250ms var(--ease); }
+.msg.ai { align-items: flex-start; align-self: flex-start; }
+.msg.user { align-items: flex-end; align-self: flex-end; }
+
+.bubble {
+  padding: 14px 18px; font-size: 14px; line-height: 1.7; word-break: break-word;
+}
+.msg.ai .bubble {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-left: 2px solid var(--border-hover);
+  border-radius: 4px 14px 14px 4px;
+  color: var(--text-primary);
+}
+.msg.user .bubble {
+  background: linear-gradient(135deg, rgba(232,168,124,0.12), rgba(232,168,124,0.06));
+  border: 1px solid var(--accent-border);
+  border-radius: 14px 4px 4px 14px;
+  color: var(--text-primary);
+}
+.msg .meta { font-size: 11px; color: var(--text-quaternary); margin: 8px 4px 0; display: flex; gap: 6px; }
+.msg.user .meta { flex-direction: row-reverse; }
+.bubble .hl { color: var(--accent); font-weight: 600; }
+
+.bubble.thinking { display: inline-flex; align-items: center; gap: 10px; }
+.bubble.thinking .dots { display: inline-flex; gap: 3px; }
+.bubble.thinking .dots i {
+  width: 4px; height: 4px; border-radius: 50%; background: var(--text-tertiary);
+  animation: blink 1.4s ease-in-out infinite;
+}
+.bubble.thinking .dots i:nth-child(2) { animation-delay: 0.2s; }
+.bubble.thinking .dots i:nth-child(3) { animation-delay: 0.4s; }
+
+/* 工具卡片 */
+.tool-card {
+  margin-top: 12px; padding: 16px 18px; border-radius: var(--r-lg);
+  background: var(--bg-overlay); border: 1px solid var(--border-subtle);
+  width: 100%; max-width: 380px;
+}
+.tool-card .tc-head { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.tool-card .tc-head .spinner {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid var(--border-default); border-top-color: var(--accent);
+  animation: spin 0.8s linear infinite;
+}
+.tool-card .tc-progress { height: 3px; border-radius: 999px; background: rgba(255,255,255,0.06); margin-top: 14px; overflow: hidden; }
+.tool-card .tc-progress .fill { height: 100%; border-radius: 999px; background: var(--accent); transition: width 0.4s var(--ease); }
+.tool-card .tc-stats { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+.tool-card .tc-stats span {
+  font-size: 11px; background: var(--bg-raised); border: 1px solid var(--border-subtle);
+  padding: 3px 10px; border-radius: 6px; color: var(--text-secondary);
+  font-family: var(--font-mono); letter-spacing: -0.01em;
+}
+
+/* 输入区 */
+.chat-input {
+  flex-shrink: 0; padding: 16px 40px 24px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-base);
+  display: flex; gap: 12px; align-items: center;
+}
+.chat-input .field {
+  flex: 1; display: flex; align-items: center; gap: 8px;
+  background: var(--bg-inset); border: 1px solid var(--border-subtle);
+  border-radius: var(--r-lg); padding: 4px 6px 4px 18px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.15);
+  transition: border-color var(--duration-fast) var(--ease), box-shadow var(--duration-fast) var(--ease);
+}
+.chat-input .field:focus-within {
+  border-color: var(--border-active);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.15), 0 0 0 3px var(--accent-subtle);
+}
+.chat-input .field input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--text-primary); font-size: 14px; padding: 10px 4px;
+}
+.chat-input .field input::placeholder { color: var(--text-quaternary); }
+.chat-input .field .clear {
+  background: transparent; border: none; color: var(--text-quaternary);
+  font-size: 16px; padding: 6px 10px; cursor: pointer; border-radius: 6px;
+  transition: all var(--duration-fast) var(--ease);
+}
+.chat-input .field .clear:hover { background: var(--bg-overlay); color: var(--text-secondary); }
+
+.btn-send {
+  background: linear-gradient(180deg, #e8a87c, #d4946a);
+  border: none; color: #1a1a1f; padding: 12px 24px; border-radius: var(--r-md);
+  font-weight: 600; font-size: 13px; cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+  transition: all var(--duration-fast) var(--ease);
+  white-space: nowrap;
+}
+.btn-send:hover { filter: brightness(1.08); }
+.btn-send:active { filter: brightness(0.95); transform: translateY(1px); }
+.btn-send:disabled { opacity: 0.4; cursor: not-allowed; transform: none; filter: none; }
+
+/* 历史面板样式已合并至左侧栏 .side-history */
+
+/* ===== 2. 系统信息 ===== */
+.sys-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0 32px; }
+.sys-item { display: flex; flex-direction: column; padding: 14px 0; border-bottom: 1px solid var(--border-subtle); }
+.sys-item .label {
+  color: var(--text-quaternary); font-size: 10px; margin-bottom: 4px;
+  letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;
+}
+.sys-item .value { color: var(--text-primary); font-size: 14px; font-weight: 500; }
+
+.status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 28px; }
+.status-item {
+  background: var(--bg-overlay); border: 1px solid var(--border-subtle);
+  border-radius: var(--r-lg); padding: 20px; text-align: center;
+  transition: all var(--duration-fast) var(--ease);
+}
+.status-item:hover { border-color: var(--border-default); transform: translateY(-2px); }
+.status-item .num { font-size: 28px; font-weight: 700; color: var(--accent); letter-spacing: -0.04em; }
+.status-item .lbl { font-size: 10px; color: var(--text-tertiary); margin-top: 6px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; }
+.status-item.green .num { color: var(--green); }
+.status-item.amber .num { color: var(--amber); }
+.status-item.red .num { color: var(--red); }
+
+/* 健康环 */
+.health-row {
+  display: flex; gap: 28px; align-items: center; margin-top: 28px;
+  padding: 24px 28px; background: var(--bg-overlay);
+  border: 1px solid var(--border-subtle); border-radius: var(--r-lg);
+}
+.ring {
+  --p: 82; width: 88px; height: 88px; border-radius: 50%; flex-shrink: 0;
+  background: conic-gradient(var(--green) calc(var(--p)*1%), rgba(255,255,255,0.04) 0);
+  display: flex; align-items: center; justify-content: center; position: relative;
+}
+.ring::before { content: ''; position: absolute; inset: 8px; border-radius: 50%; background: var(--bg-overlay); }
+.ring .ring-val { position: relative; z-index: 1; font-size: 20px; font-weight: 700; color: var(--green); }
+.ring .ring-sub { position: relative; z-index: 1; font-size: 9px; color: var(--text-quaternary); display: block; text-align: center; }
+.health-info h4 { font-size: 16px; font-weight: 600; margin-bottom: 8px; letter-spacing: -0.02em; }
+.health-info p { font-size: 13px; color: var(--text-tertiary); line-height: 1.7; max-width: 420px; }
+
+/* ===== 3. 工具库 ===== */
+.tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.tool-item {
+  background: var(--bg-raised); border: 1px solid var(--border-subtle);
+  border-radius: var(--r-xl); padding: 24px; cursor: pointer;
+  transition: all var(--duration-fast) var(--ease); position: relative;
+}
+.tool-item:hover { border-color: var(--border-hover); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+.tool-item .ti-icon {
+  width: 40px; height: 40px; border-radius: var(--r-md);
+  background: var(--accent-subtle); color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px; border: 1px solid var(--accent-border);
+}
+.tool-item .ti-icon svg { width: 20px; height: 20px; }
+.tool-item .ti-name { font-size: 15px; font-weight: 600; margin-bottom: 6px; letter-spacing: -0.02em; }
+.tool-item .ti-desc { font-size: 12px; color: var(--text-tertiary); margin-bottom: 18px; line-height: 1.6; min-height: 38px; }
+.tool-item .ti-foot { display: flex; align-items: center; justify-content: space-between; }
+.ti-status { font-size: 11px; font-weight: 500; padding: 4px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; }
+.ti-status.ready { color: var(--green); background: var(--green-subtle); }
+.ti-status.missing { color: var(--amber); background: var(--amber-subtle); }
+.ti-status .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.ti-run {
+  background: transparent; border: 1px solid var(--border-default);
+  color: var(--accent); padding: 6px 14px; border-radius: var(--r-sm);
+  font-size: 12px; font-weight: 500; cursor: pointer;
+  transition: all var(--duration-fast) var(--ease);
+}
+.ti-run:hover { background: var(--accent-subtle); border-color: var(--border-active); }
+
+/* 就绪面板 */
+.ready-card { margin-bottom: 24px; }
+.ready-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+.ready-head h3 { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px; letter-spacing: -0.02em; }
+.ready-head h3 .ico {
+  width: 26px; height: 26px; border-radius: 7px;
+  background: var(--accent-subtle); color: var(--accent);
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--accent-border);
+}
+.ready-head h3 .ico svg { width: 14px; height: 14px; }
+.ready-head .rh-sub { font-size: 12px; color: var(--text-tertiary); margin-top: 4px; }
+.ready-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 14px; border-radius: var(--r-sm);
+  background: var(--bg-overlay); border: 1px solid var(--border-subtle);
+  margin-bottom: 6px; transition: border-color var(--duration-fast) var(--ease);
+}
+.ready-row:hover { border-color: var(--border-default); }
+.ready-row .rr-name { font-weight: 500; flex: 1; font-size: 13px; color: var(--text-secondary); }
+.ready-row .rr-ver { font-size: 11px; color: var(--text-quaternary); font-family: var(--font-mono); }
+
+/* ===== 4. 我的 ===== */
+.profile-wrap { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+.profile-main { flex: 1; min-width: 320px; }
+.profile-head { display: flex; align-items: center; gap: 18px; margin-bottom: 28px; padding-bottom: 24px; border-bottom: 1px solid var(--border-subtle); }
+.avatar-lg {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: linear-gradient(160deg, #e8a87c, #c48b60);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; font-weight: 700; color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+  flex-shrink: 0;
+}
+.ph-name { font-size: 20px; font-weight: 700; letter-spacing: -0.03em; }
+.ph-sub { font-size: 12px; color: var(--text-tertiary); margin-top: 4px; display: flex; align-items: center; gap: 8px; }
+.tag {
+  font-size: 10px; font-weight: 600; background: var(--accent-subtle);
+  color: var(--accent); padding: 2px 8px; border-radius: 4px;
+  border: 1px solid var(--accent-border);
+}
+.field-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border-subtle); }
+.field-row .fl { color: var(--text-tertiary); font-size: 13px; }
+.field-row .fv { color: var(--text-primary); font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 10px; }
+.field-row .fv .mask { color: var(--text-tertiary); font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.04em; }
+.copy-btn {
+  background: var(--bg-overlay); border: 1px solid var(--border-subtle);
+  color: var(--text-tertiary); font-size: 11px; padding: 3px 10px;
+  border-radius: 5px; cursor: pointer; transition: all var(--duration-fast) var(--ease);
+}
+.copy-btn:hover { color: var(--accent); border-color: var(--border-active); }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 20px; border-radius: var(--r-md);
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  transition: all var(--duration-fast) var(--ease); border: none;
+}
+.btn svg { width: 15px; height: 15px; }
+.btn-primary {
+  background: linear-gradient(180deg, #e8a87c, #d4946a); color: #1a1a1f;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.15);
+  font-weight: 600;
+}
+.btn-primary:hover { filter: brightness(1.08); }
+.btn-primary:active { filter: brightness(0.95); transform: translateY(1px); }
+.btn-ghost { background: var(--bg-overlay); border: 1px solid var(--border-subtle); color: var(--text-secondary); }
+.btn-ghost:hover { border-color: var(--border-hover); color: var(--text-primary); }
+.btn-danger { background: transparent; border: 1px solid var(--border-subtle); color: var(--red); }
+.btn-danger:hover { background: var(--red-subtle); border-color: rgba(252,165,165,0.2); }
+.profile-actions { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+
+/* 右侧统计 */
+.side-stats { width: 280px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px; }
+.stat-card { padding: 20px 22px; }
+.stat-card .sc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.stat-card .sc-head .sc-label { font-size: 12px; color: var(--text-tertiary); font-weight: 500; }
+.stat-card .sc-head .sc-val { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; }
+.stat-card .sc-bar { height: 4px; border-radius: 999px; background: rgba(255,255,255,0.05); overflow: hidden; }
+.stat-card .sc-bar .fill { height: 100%; border-radius: 999px; background: var(--accent); transition: width 0.6s var(--ease); }
+.stat-card .sc-bar .fill.green { background: var(--green); }
+.stat-card .sc-bar .fill.amber { background: var(--amber); }
+.stat-card .sc-bar .fill.red { background: var(--red); }
+.stat-card .sc-sub { font-size: 11px; color: var(--text-quaternary); margin-top: 8px; }
+
+/* ===== 动画 ===== */
+@keyframes viewIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes msgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes blink { 0%,60%,100% { opacity: 0.3; } 30% { opacity: 1; } }
+
+/* ===== 滚动条 ===== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.14); }
+
+/* ===== 响应式 ===== */
+@media (max-width: 1100px) {
+  .sidebar { display: none; }
+  .side-stats { display: none; }
+  .main { padding: 24px; }
+  .chat-scroll { padding: 20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- 顶部栏 -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h4l2-5 4 10 2-5h4"/></svg>
+      </div>
+      <div class="brand-text">
+        <div class="bn">CorePulse</div>
+        <div class="bs">电脑智能诊断助手</div>
+      </div>
+    </div>
+    <div class="status-pill"><span class="dot"></span> 服务正常 · 已连接</div>
+    <div class="top-right">
+      <div class="top-user"><span class="uname">开发者</span><div class="avatar">J</div></div>
+    </div>
+  </header>
+
+  <div class="body">
+    <!-- 左侧栏（导航 + 会话历史合并） -->
+    <nav class="sidebar chat-mode">
+      <div class="side-nav">
+        <div class="nav-label">导航</div>
+        <button class="nav-item active" data-view="chat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          智能诊断
+        </button>
+        <button class="nav-item" data-view="system">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          系统信息
+        </button>
+        <button class="nav-item" data-view="tools">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.8 2.8-2.2-2.2 2.8-2.8z"/></svg>
+          工具库
+          <span class="nav-badge">3</span>
+        </button>
+        <button class="nav-item" data-view="profile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+          我的
+        </button>
+      </div>
+
+      <div class="side-history">
+        <div class="h-title">历史会话</div>
+        <button class="btn-new">+ 新建会话</button>
+        <input class="h-search" type="text" placeholder="搜索会话..." />
+        <div class="h-item active">显卡压力测试<span class="time">10:24</span></div>
+        <div class="h-item">蓝屏问题排查<span class="time">昨天</span></div>
+        <div class="h-item">C盘空间清理<span class="time">3天前</span></div>
+        <div class="h-item">全面体检报告<span class="time">上周</span></div>
+        <div class="h-foot">共 4 条记录</div>
+      </div>
+
+      <div class="side-foot">
+        <div class="mini-card">
+          <div class="mc-title"><span class="dot"></span>实时状态</div>
+          <div class="mc-row"><span>CPU</span><span>32%</span></div>
+          <div class="mini-meter"><div class="fill" style="width:32%"></div></div>
+          <div class="mc-row"><span>内存</span><span>58%</span></div>
+          <div class="mini-meter"><div class="fill" style="width:58%"></div></div>
+          <div class="mc-row"><span>温度</span><span>54℃</span></div>
+          <div class="mini-meter"><div class="fill amber" style="width:54%"></div></div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <main class="main">
+      <!-- ===== 会话视图 ===== -->
+      <section class="view chat-view active" id="view-chat">
+        <div class="chat-main">
+          <div class="chat-scroll">
+            <div class="msg ai">
+              <div class="bubble">你好，我是 <span class="hl">小脉</span>，你的电脑诊断专家。<br><br>描述一下遇到的问题，例如：<br>「玩游戏时出现蓝屏」或「风扇噪声异常」<br><br>也可以试试：<span class="hl">帮我对显卡进行压力测试</span></div>
+              <div class="meta"><span>小脉</span><span>·</span><span>刚刚</span></div>
+            </div>
+            <div class="msg user">
+              <div class="bubble">帮我对显卡进行压力测试</div>
+              <div class="meta"><span>你</span><span>·</span><span>刚刚</span></div>
+            </div>
+            <div class="msg ai">
+              <div class="bubble">好的，即将对 <span class="hl">RTX 4060</span> 进行 30 分钟压力测试。请确保散热正常，测试开始后我会实时汇报进度。</div>
+              <div class="meta"><span>小脉</span><span>·</span><span>刚刚</span></div>
+              <div class="tool-card">
+                <div class="tc-head"><span class="spinner"></span>显卡压力测试 · FurMark</div>
+                <div class="tc-progress"><div class="fill" style="width:42%"></div></div>
+                <div class="tc-stats"><span>67℃</span><span>89 FPS</span><span>12s</span></div>
+              </div>
+            </div>
+            <div class="msg ai">
+              <div class="bubble thinking">正在分析测试结果<span class="dots"><i></i><i></i><i></i></span></div>
+              <div class="meta"><span>小脉</span><span>·</span><span>正在分析</span></div>
+            </div>
+          </div>
+          <div class="chat-input">
+            <div class="field">
+              <input type="text" placeholder="描述你的问题或输入指令..." />
+              <button class="clear">×</button>
+            </div>
+            <button class="btn-send">发送</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 系统信息视图 ===== -->
+      <section class="view" id="view-system">
+        <div class="page-head">
+          <div class="page-title"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>系统信息</div>
+          <div class="page-sub">查看当前设备的硬件配置与实时运行状态</div>
+        </div>
+
+        <div class="card card-pad">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+            <h3 style="font-size:18px;font-weight:600;letter-spacing:-0.02em;">设备配置</h3>
+            <button class="btn btn-ghost" style="padding:7px 14px;font-size:12px;">↻ 重新检测</button>
+          </div>
+          <div class="sys-grid">
+            <div class="sys-item"><span class="label">操作系统</span><span class="value">Windows 11 专业版 64位</span></div>
+            <div class="sys-item"><span class="label">处理器</span><span class="value">Intel Core i7-13700K</span></div>
+            <div class="sys-item"><span class="label">内存</span><span class="value">32GB DDR5 6000MHz</span></div>
+            <div class="sys-item"><span class="label">显卡</span><span class="value">NVIDIA RTX 4060 8GB</span></div>
+            <div class="sys-item"><span class="label">主板</span><span class="value">ASUS ROG Strix Z790</span></div>
+            <div class="sys-item"><span class="label">存储</span><span class="value">1TB NVMe SSD</span></div>
+          </div>
+          <div class="status-grid">
+            <div class="status-item"><div class="num">32%</div><div class="lbl">CPU 负载</div></div>
+            <div class="status-item"><div class="num">58%</div><div class="lbl">内存使用</div></div>
+            <div class="status-item amber"><div class="num">54℃</div><div class="lbl">CPU 温度</div></div>
+            <div class="status-item green"><div class="num">健康</div><div class="lbl">磁盘状态</div></div>
+          </div>
+          <div class="health-row">
+            <div class="ring"><div><span class="ring-val">82</span><span class="ring-sub">/ 100</span></div></div>
+            <div class="health-info">
+              <h4>综合健康评分</h4>
+              <p>设备整体运行良好。建议：更新显卡驱动、清理磁盘缓存以保持最佳性能。系统已连续运行 6 天，建议定期重启。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 工具库视图 ===== -->
+      <section class="view" id="view-tools">
+        <div class="page-head">
+          <div class="page-title"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.8 2.8-2.2-2.2 2.8-2.8z"/></svg></span>工具库</div>
+          <div class="page-sub">点击「运行」即可单独执行测试，诊断助手会自动读取结果</div>
+        </div>
+
+        <div class="card card-pad ready-card">
+          <div class="ready-head">
+            <div>
+              <h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></span>工具就绪状态</h3>
+              <div class="rh-sub">检测到 1 个工具未安装</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-ghost" style="padding:7px 14px;font-size:12px;">↻ 刷新</button>
+              <button class="btn btn-primary" style="padding:7px 14px;font-size:12px;">一键准备</button>
+            </div>
+          </div>
+          <div class="ready-row"><span class="ti-status ready"><span class="dot"></span>已就绪</span><span class="rr-name">FurMark 显卡压力测试</span><span class="rr-ver">v1.2</span></div>
+          <div class="ready-row"><span class="ti-status ready"><span class="dot"></span>已就绪</span><span class="rr-name">MemTest 内存诊断</span><span class="rr-ver">v1.0</span></div>
+          <div class="ready-row"><span class="ti-status missing"><span class="dot"></span>未安装</span><span class="rr-name">LibreHardwareMonitor 温度监控</span><span class="rr-ver">需管理员权限</span></div>
+        </div>
+
+        <div class="tools-grid">
+          <div class="tool-item">
+            <div class="ti-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+            <div class="ti-name">显卡压力测试</div>
+            <div class="ti-desc">通过 FurMark 进行 30 分钟烤机，检测显卡稳定性与温度表现。</div>
+            <div class="ti-foot"><span class="ti-status ready"><span class="dot"></span>已就绪</span><button class="ti-run">运行</button></div>
+          </div>
+          <div class="tool-item">
+            <div class="ti-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/></svg></div>
+            <div class="ti-name">内存诊断</div>
+            <div class="ti-desc">运行 MemTest 检测内存故障，排查蓝屏、重启等疑难问题。</div>
+            <div class="ti-foot"><span class="ti-status ready"><span class="dot"></span>已就绪</span><button class="ti-run">运行</button></div>
+          </div>
+          <div class="tool-item">
+            <div class="ti-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h6"/></svg></div>
+            <div class="ti-name">硬盘健康扫描</div>
+            <div class="ti-desc">读取 SMART 数据，检测硬盘健康状态、坏道与寿命预警。</div>
+            <div class="ti-foot"><span class="ti-status ready"><span class="dot"></span>已就绪</span><button class="ti-run">运行</button></div>
+          </div>
+          <div class="tool-item">
+            <div class="ti-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v10a2 2 0 1 1-4 0V4a2 2 0 1 1 4 0z"/><path d="M8 14h8"/></svg></div>
+            <div class="ti-name">CPU 温度监控</div>
+            <div class="ti-desc">实时监控 CPU 温度变化，异常高温及时预警。</div>
+            <div class="ti-foot"><span class="ti-status missing"><span class="dot"></span>未安装</span><button class="ti-run">运行</button></div>
+          </div>
+          <div class="tool-item">
+            <div class="ti-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></div>
+            <div class="ti-name">全面体检</div>
+            <div class="ti-desc">一键串联多项检测，生成综合诊断报告，定位潜在问题。</div>
+            <div class="ti-foot"><span class="ti-status ready"><span class="dot"></span>已就绪</span><button class="ti-run">运行</button></div>
+          </div>
+          <div class="tool-item">
+            <div class="ti-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-2"/><rect x="9" y="1" width="6" height="4" rx="1"/><path d="M9 13l2 2 4-4"/></svg></div>
+            <div class="ti-name">诊断报告</div>
+            <div class="ti-desc">将检测结果汇总导出为 PDF 报告，方便保存与分享。</div>
+            <div class="ti-foot"><span class="ti-status ready"><span class="dot"></span>已就绪</span><button class="ti-run">运行</button></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 我的视图 ===== -->
+      <section class="view" id="view-profile">
+        <div class="page-head">
+          <div class="page-title"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>我的</div>
+          <div class="page-sub">管理你的账号信息与偏好设置</div>
+        </div>
+
+        <div class="profile-wrap">
+          <div class="profile-main">
+            <div class="card card-pad">
+              <div class="profile-head">
+                <div class="avatar-lg">J</div>
+                <div>
+                  <div class="ph-name">开发者</div>
+                  <div class="ph-sub">专业版用户 <span class="tag">已认证</span></div>
+                </div>
+              </div>
+              <div class="field-row"><span class="fl">账号 ID</span><span class="fv">U_20260918</span></div>
+              <div class="field-row"><span class="fl">邮箱</span><span class="fv">dev@example.com</span></div>
+              <div class="field-row"><span class="fl">API 密钥</span><span class="fv"><span class="mask">sk-••••••••••••4f2a</span><button class="copy-btn">复制</button></span></div>
+              <div class="field-row"><span class="fl">注册时间</span><span class="fv">2026-09-18</span></div>
+              <div class="profile-actions">
+                <button class="btn btn-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>偏好设置</button>
+                <button class="btn btn-danger">退出登录</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="side-stats">
+            <div class="card stat-card">
+              <div class="sc-head"><span class="sc-label">本月诊断次数</span><span class="sc-val">24</span></div>
+              <div class="sc-bar"><div class="fill" style="width:60%"></div></div>
+              <div class="sc-sub">较上月 +12%</div>
+            </div>
+            <div class="card stat-card">
+              <div class="sc-head"><span class="sc-label">诊断报告</span><span class="sc-val">8</span></div>
+              <div class="sc-bar"><div class="fill green" style="width:40%"></div></div>
+              <div class="sc-sub">已生成 8 份报告</div>
+            </div>
+            <div class="card stat-card">
+              <div class="sc-head"><span class="sc-label">存储空间</span><span class="sc-val">1.2TB</span></div>
+              <div class="sc-bar"><div class="fill amber" style="width:72%"></div></div>
+              <div class="sc-sub">已用 72% · 建议清理</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+const navItems = document.querySelectorAll('.nav-item');
+const views = document.querySelectorAll('.view');
+const sidebar = document.querySelector('.sidebar');
+navItems.forEach(item => {
+  item.addEventListener('click', () => {
+    navItems.forEach(n => n.classList.remove('active'));
+    item.classList.add('active');
+    const t = item.dataset.view;
+    // 仅会话视图展示左侧会话历史
+    sidebar.classList.toggle('chat-mode', t === 'chat');
+    views.forEach(v => { v.classList.remove('active'); v.style.animation = 'none'; });
+    const target = document.getElementById('view-' + t);
+    target.classList.add('active');
+    void target.offsetWidth;
+    target.style.animation = '';
+  });
+});
+const sendBtn = document.querySelector('.btn-send');
+const input = document.querySelector('.chat-input input');
+sendBtn.addEventListener('click', () => {
+  if (!input.value.trim()) return;
+  const scroll = document.querySelector('.chat-scroll');
+  const msg = document.createElement('div');
+  msg.className = 'msg user';
+  msg.innerHTML = '<div class="bubble"></div><div class="meta"><span>你</span><span>·</span><span>刚刚</span></div>';
+  msg.querySelector('.bubble').textContent = input.value;
+  scroll.appendChild(msg);
+  input.value = '';
+  scroll.scrollTop = scroll.scrollHeight;
+});
+input.addEventListener('keydown', e => { if (e.key === 'Enter') sendBtn.click(); });
+</script>
+</body>
+</html>

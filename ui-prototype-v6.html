@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CorePulse 核心律动 · UI 原型 v7</title>
+<style>
+/* ==========================================================
+   CorePulse 核心律动 · UI 原型 v7
+   —— 极简单色 · 发丝线 · 排版即设计
+   ========================================================== */
+:root {
+  /* 底色：三层灰阶，无色相 */
+  --bg: #09090b;
+  --panel: #101013;
+  --panel-2: #161619;
+  --inset: #0c0c0e;
+
+  /* 边框：发丝线 */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+
+  /* 强调色：唯一一个，用得极少 */
+  --accent: #7b8cfa;
+  --accent-dim: rgba(123, 140, 250, 0.12);
+
+  /* 语义色（低饱和） */
+  --green: #66d19e;
+  --amber: #e5b567;
+  --red: #e5735f;
+
+  /* 文字 */
+  --text-1: #f4f4f5;
+  --text-2: #a1a1aa;
+  --text-3: #61616b;
+  --text-4: #3f3f46;
+
+  /* 圆角 */
+  --r-lg: 12px;
+  --r-md: 9px;
+  --r-sm: 7px;
+
+  /* 字体 */
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --font-mono: 'SF Mono', 'JetBrains Mono', Consolas, monospace;
+
+  --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; width: 100%; }
+
+body {
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-1);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+::selection { background: rgba(123, 140, 250, 0.25); }
+
+/* ===== 外壳 ===== */
+.app { width: 100vw; height: 100vh; display: flex; flex-direction: column; }
+
+/* ===== 顶栏 ===== */
+.topbar {
+  height: 56px; padding: 0 28px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.brand { display: flex; align-items: center; gap: 11px; }
+.logo-mark {
+  width: 26px; height: 26px; border-radius: 7px;
+  background: var(--text-1);
+  display: flex; align-items: center; justify-content: center;
+}
+.logo-mark svg { width: 14px; height: 14px; color: var(--bg); }
+.brand-text .bn { font-size: 14px; font-weight: 600; letter-spacing: -0.02em; }
+.brand-text .bs { font-size: 11px; color: var(--text-3); margin-top: 0; }
+
+.status-pill {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12px; color: var(--text-2);
+}
+.status-pill .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green);
+}
+.status-pill .sep { color: var(--text-4); }
+
+.top-right { display: flex; align-items: center; gap: 16px; }
+.top-user { display: flex; align-items: center; gap: 9px; }
+.top-user .uname { font-size: 13px; color: var(--text-2); }
+.avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--panel-2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600; font-size: 12px; color: var(--text-1);
+  cursor: pointer; transition: border-color 160ms var(--ease);
+}
+.avatar:hover { border-color: var(--border-strong); }
+
+/* ===== 主体 ===== */
+.body { flex: 1; display: flex; min-height: 0; }
+
+/* ===== 左侧栏 ===== */
+.sidebar {
+  width: 260px; flex-shrink: 0; min-height: 0;
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+}
+.side-nav { padding: 20px 12px 12px; flex-shrink: 0; }
+.nav-label {
+  font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-4); padding: 0 12px; margin-bottom: 10px; font-weight: 500;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; margin-bottom: 1px; border-radius: var(--r-md);
+  color: var(--text-2); font-size: 13.5px; font-weight: 450;
+  cursor: pointer; border: none; background: transparent;
+  transition: all 140ms var(--ease);
+  text-align: left; width: 100%;
+}
+.nav-item svg { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.7; }
+.nav-item:hover { background: var(--panel); color: var(--text-1); }
+.nav-item:hover svg { opacity: 1; }
+.nav-item.active { background: var(--panel-2); color: var(--text-1); font-weight: 550; }
+.nav-item.active svg { opacity: 1; color: var(--accent); }
+.nav-item .nav-badge {
+  margin-left: auto; font-size: 11px; font-weight: 500;
+  color: var(--text-3); font-variant-numeric: tabular-nums;
+}
+
+/* 会话历史区 */
+.side-history {
+  flex: 1; min-height: 0; overflow-y: auto;
+  padding: 14px 12px 12px;
+  border-top: 1px solid var(--border);
+  display: none; flex-direction: column;
+}
+.sidebar.chat-mode .side-history { display: flex; }
+.side-history .h-title {
+  font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-4); font-weight: 500; margin-bottom: 12px; padding: 0 12px;
+}
+.side-history .btn-new {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 8px; margin-bottom: 12px; border-radius: var(--r-md);
+  background: var(--text-1); border: none;
+  color: var(--bg); font-weight: 550; font-size: 12.5px; cursor: pointer;
+  transition: background 140ms var(--ease);
+}
+.side-history .btn-new:hover { background: #d4d4d8; }
+.side-history .h-search {
+  background: transparent; border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 8px 12px; color: var(--text-1);
+  font-size: 12.5px; outline: none; margin-bottom: 10px; width: 100%;
+  transition: border-color 140ms var(--ease);
+}
+.side-history .h-search::placeholder { color: var(--text-4); }
+.side-history .h-search:focus { border-color: var(--border-strong); }
+.side-history .h-item {
+  padding: 9px 12px; border-radius: var(--r-md); font-size: 13px;
+  color: var(--text-2); cursor: pointer; margin-bottom: 1px;
+  transition: all 140ms var(--ease); line-height: 1.4; flex-shrink: 0;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+}
+.side-history .h-item:hover { background: var(--panel); color: var(--text-1); }
+.side-history .h-item.active { background: var(--panel-2); color: var(--text-1); }
+.side-history .h-item .time { font-size: 11px; color: var(--text-4); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.side-history .h-foot {
+  margin-top: auto; padding: 12px 12px 0;
+  border-top: 1px solid var(--border);
+  font-size: 11px; color: var(--text-4);
+}
+
+/* 底部实时状态 */
+.side-foot { flex-shrink: 0; padding: 12px; border-top: 1px solid var(--border); }
+.sidebar.chat-mode .side-foot { border-top: none; padding-top: 0; }
+.mini-card { padding: 4px 0; }
+.mini-card .mc-title {
+  font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-4); font-weight: 500; margin-bottom: 12px; padding: 0 4px;
+  display: flex; align-items: center; gap: 7px;
+}
+.mini-card .mc-title .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
+.mini-meter { height: 2px; border-radius: 999px; background: var(--panel-2); overflow: hidden; margin: 5px 0 12px; }
+.mini-meter:last-child { margin-bottom: 2px; }
+.mini-meter .fill { height: 100%; background: var(--text-2); transition: width 0.6s var(--ease); }
+.mini-meter .fill.green { background: var(--green); }
+.mini-meter .fill.amber { background: var(--amber); }
+.mini-card .mc-row {
+  display: flex; justify-content: space-between; font-size: 12px;
+  color: var(--text-2); padding: 0 4px;
+  font-variant-numeric: tabular-nums;
+}
+.mini-card .mc-row span:last-child { color: var(--text-1); font-weight: 500; }
+
+/* ===== 主内容 ===== */
+.main { flex: 1; min-width: 0; overflow-y: auto; }
+.view { display: none; animation: viewIn 240ms var(--ease); }
+.view.active { display: block; }
+.main-pad { padding: 44px 56px; max-width: 1120px; }
+.page-head { margin-bottom: 40px; }
+.page-title { font-size: 24px; font-weight: 600; letter-spacing: -0.03em; }
+.page-sub { color: var(--text-3); font-size: 13.5px; margin-top: 6px; }
+
+/* 卡片：白描边 + 微弱层次，无阴影 */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+}
+.card-pad { padding: 28px 32px; }
+
+/* 分区标题行 */
+.sec-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+}
+.sec-head h3 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+
+/* ===== 1. 会话 ===== */
+.chat-view { display: none; }
+.chat-view.active { display: flex; height: 100%; }
+.chat-main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; }
+.chat-scroll { flex: 1; overflow-y: auto; padding: 40px 56px; display: flex; flex-direction: column; gap: 28px; }
+.msg { display: flex; flex-direction: column; max-width: 64%; animation: msgIn 240ms var(--ease); }
+.msg.ai { align-items: flex-start; align-self: flex-start; }
+.msg.user { align-items: flex-end; align-self: flex-end; }
+
+/* AI 消息：无气泡框，直接排版（更轻） */
+.msg.ai .bubble { font-size: 14px; line-height: 1.75; color: var(--text-1); padding-left: 1px; }
+.msg.user .bubble {
+  background: var(--panel-2); border: 1px solid var(--border);
+  padding: 11px 16px; border-radius: 14px; font-size: 14px; line-height: 1.6;
+}
+.msg .meta { font-size: 11px; color: var(--text-4); margin: 8px 2px 0; display: flex; gap: 6px; }
+.msg.user .meta { flex-direction: row-reverse; }
+.bubble .hl { color: var(--accent); }
+
+.bubble.thinking { display: inline-flex; align-items: center; gap: 10px; color: var(--text-3); }
+.bubble.thinking .dots { display: inline-flex; gap: 3px; }
+.bubble.thinking .dots i {
+  width: 3px; height: 3px; border-radius: 50%; background: var(--text-3);
+  animation: blink 1.4s ease-in-out infinite;
+}
+.bubble.thinking .dots i:nth-child(2) { animation-delay: 0.2s; }
+.bubble.thinking .dots i:nth-child(3) { animation-delay: 0.4s; }
+
+/* 工具卡片：内嵌运行状态 */
+.tool-card {
+  margin-top: 14px; padding: 14px 16px; border-radius: var(--r-md);
+  background: var(--panel); border: 1px solid var(--border);
+  width: 100%; max-width: 400px;
+}
+.tool-card .tc-head { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 550; }
+.tool-card .tc-head .spinner {
+  width: 12px; height: 12px; border-radius: 50%;
+  border: 1.5px solid var(--border-strong); border-top-color: var(--text-1);
+  animation: spin 0.8s linear infinite;
+}
+.tool-card .tc-progress { height: 2px; border-radius: 999px; background: var(--panel-2); margin-top: 12px; overflow: hidden; }
+.tool-card .tc-progress .fill { height: 100%; background: var(--text-1); transition: width 0.4s var(--ease); }
+.tool-card .tc-stats { display: flex; gap: 14px; margin-top: 12px; }
+.tool-card .tc-stats span {
+  font-size: 12px; color: var(--text-2);
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+}
+.tool-card .tc-stats span:first-child { color: var(--amber); }
+
+/* 输入区 */
+.chat-input {
+  flex-shrink: 0; padding: 16px 56px 28px;
+  border-top: 1px solid var(--border);
+  display: flex; gap: 10px; align-items: center;
+}
+.chat-input .field {
+  flex: 1; display: flex; align-items: center; gap: 8px;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 4px 6px 4px 16px;
+  transition: border-color 140ms var(--ease);
+}
+.chat-input .field:focus-within { border-color: var(--border-strong); }
+.chat-input .field input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--text-1); font-size: 14px; padding: 10px 4px;
+}
+.chat-input .field input::placeholder { color: var(--text-4); }
+.chat-input .field .clear {
+  background: transparent; border: none; color: var(--text-4);
+  font-size: 15px; padding: 6px 10px; cursor: pointer; border-radius: 6px;
+  transition: color 140ms var(--ease);
+}
+.chat-input .field .clear:hover { color: var(--text-2); }
+
+.btn-send {
+  background: var(--text-1); border: none; color: var(--bg);
+  padding: 11px 22px; border-radius: var(--r-md);
+  font-weight: 550; font-size: 13px; cursor: pointer;
+  transition: background 140ms var(--ease);
+}
+.btn-send:hover { background: #d4d4d8; }
+.btn-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ===== 2. 系统信息 ===== */
+.sys-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 40px; }
+.sys-item { display: flex; flex-direction: column; padding: 13px 0; border-bottom: 1px solid var(--border); }
+.sys-item .label {
+  color: var(--text-4); font-size: 11px; margin-bottom: 3px;
+  letter-spacing: 0.04em; font-weight: 450;
+}
+.sys-item .value { font-size: 13.5px; font-weight: 500; letter-spacing: -0.01em; }
+
+/* 指标行：数字表格式布局 */
+.metrics { display: flex; border: 1px solid var(--border); border-radius: var(--r-lg); margin-top: 28px; overflow: hidden; }
+.metric {
+  flex: 1; padding: 20px 24px; text-align: left;
+  border-right: 1px solid var(--border);
+}
+.metric:last-child { border-right: none; }
+.metric .num { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.metric .num.green { color: var(--green); }
+.metric .num.amber { color: var(--amber); }
+.metric .lbl { font-size: 11px; color: var(--text-3); margin-top: 4px; letter-spacing: 0.04em; }
+
+/* 健康评分 */
+.health-row { display: flex; gap: 28px; align-items: center; margin-top: 28px; }
+.ring {
+  --p: 82; width: 76px; height: 76px; border-radius: 50%; flex-shrink: 0;
+  background: conic-gradient(var(--green) calc(var(--p)*1%), var(--panel-2) 0);
+  display: flex; align-items: center; justify-content: center; position: relative;
+}
+.ring::before { content: ''; position: absolute; inset: 7px; border-radius: 50%; background: var(--bg); }
+.ring .ring-val { position: relative; z-index: 1; font-size: 18px; font-weight: 600; color: var(--text-1); font-variant-numeric: tabular-nums; }
+.health-info h4 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.health-info p { font-size: 13px; color: var(--text-2); line-height: 1.7; max-width: 520px; }
+
+/* ===== 3. 工具库 ===== */
+.ready-card { margin-bottom: 16px; }
+.ready-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+.ready-head .rh-sub { font-size: 12.5px; color: var(--text-3); margin-top: 3px; }
+.ready-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 16px; border-radius: var(--r-md);
+  border: 1px solid var(--border); margin-bottom: 8px;
+  transition: border-color 140ms var(--ease);
+}
+.ready-row:hover { border-color: var(--border-strong); }
+.ready-row .rr-name { font-weight: 500; flex: 1; font-size: 13.5px; }
+.ready-row .rr-ver { font-size: 12px; color: var(--text-3); font-family: var(--font-mono); }
+
+/* 工具网格：表格式列表，比卡片更克制 */
+.tools-list { border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; margin-top: 28px; }
+.tool-row {
+  display: flex; align-items: center; gap: 18px;
+  padding: 18px 24px; border-bottom: 1px solid var(--border);
+  background: var(--panel); cursor: pointer;
+  transition: background 140ms var(--ease);
+}
+.tool-row:last-child { border-bottom: none; }
+.tool-row:hover { background: var(--panel-2); }
+.tool-row .ti-icon { color: var(--text-3); flex-shrink: 0; display: flex; }
+.tool-row .ti-icon svg { width: 18px; height: 18px; }
+.tool-row .ti-name { font-size: 14px; font-weight: 550; width: 140px; flex-shrink: 0; }
+.tool-row .ti-desc { font-size: 13px; color: var(--text-3); flex: 1; }
+.tool-row .ti-foot { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+.ti-status { font-size: 12px; display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); }
+.ti-status.ready { color: var(--green); }
+.ti-status.missing { color: var(--amber); }
+.ti-status .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.ti-run {
+  background: transparent; border: 1px solid var(--border-strong);
+  color: var(--text-1); padding: 5px 14px; border-radius: var(--r-sm);
+  font-size: 12px; font-weight: 500; cursor: pointer;
+  transition: all 140ms var(--ease);
+}
+.ti-run:hover { background: var(--text-1); color: var(--bg); border-color: var(--text-1); }
+
+/* ===== 4. 我的 ===== */
+.profile-wrap { display: flex; gap: 16px; align-items: flex-start; }
+.profile-main { flex: 1; min-width: 0; }
+.profile-head { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+.avatar-lg {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--panel-2); border: 1px solid var(--border-strong);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 19px; font-weight: 600; flex-shrink: 0;
+}
+.ph-name { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; }
+.ph-sub { font-size: 12.5px; color: var(--text-3); margin-top: 3px; display: flex; align-items: center; gap: 8px; }
+.tag {
+  font-size: 11px; font-weight: 500; color: var(--accent);
+  background: var(--accent-dim); padding: 2px 8px; border-radius: 4px;
+}
+.field-row { display: flex; justify-content: space-between; align-items: center; padding: 13px 0; border-bottom: 1px solid var(--border); }
+.field-row:last-of-type { border-bottom: none; }
+.field-row .fl { color: var(--text-3); font-size: 13px; }
+.field-row .fv { font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 10px; font-variant-numeric: tabular-nums; }
+.field-row .fv .mask { color: var(--text-3); font-family: var(--font-mono); font-size: 12px; }
+.copy-btn {
+  background: transparent; border: 1px solid var(--border-strong);
+  color: var(--text-2); font-size: 11px; padding: 3px 9px;
+  border-radius: 5px; cursor: pointer; transition: all 140ms var(--ease);
+}
+.copy-btn:hover { color: var(--text-1); }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 18px; border-radius: var(--r-md);
+  font-size: 13px; font-weight: 550; cursor: pointer;
+  transition: all 140ms var(--ease); border: none;
+}
+.btn svg { width: 14px; height: 14px; }
+.btn-primary { background: var(--text-1); color: var(--bg); }
+.btn-primary:hover { background: #d4d4d8; }
+.btn-ghost { background: transparent; border: 1px solid var(--border-strong); color: var(--text-2); }
+.btn-ghost:hover { color: var(--text-1); border-color: var(--text-3); }
+.btn-danger { background: transparent; border: 1px solid var(--border); color: var(--text-3); }
+.btn-danger:hover { color: var(--red); border-color: var(--red); }
+.profile-actions { display: flex; gap: 10px; margin-top: 24px; }
+
+/* 右侧统计 */
+.side-stats { width: 260px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; }
+.stat-card { padding: 20px 22px; }
+.stat-card .sc-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+.stat-card .sc-head .sc-label { font-size: 12px; color: var(--text-3); }
+.stat-card .sc-head .sc-val { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.stat-card .sc-bar { height: 2px; border-radius: 999px; background: var(--panel-2); overflow: hidden; }
+.stat-card .sc-bar .fill { height: 100%; background: var(--text-1); transition: width 0.6s var(--ease); }
+.stat-card .sc-bar .fill.green { background: var(--green); }
+.stat-card .sc-bar .fill.amber { background: var(--amber); }
+.stat-card .sc-sub { font-size: 11.5px; color: var(--text-4); margin-top: 10px; }
+
+/* ===== 动画 ===== */
+@keyframes viewIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes msgIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes blink { 0%, 60%, 100% { opacity: 0.25; } 30% { opacity: 1; } }
+
+/* ===== 滚动条 ===== */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 999px; }
+
+/* ===== 响应式 ===== */
+@media (max-width: 1100px) {
+  .sidebar { display: none; }
+  .side-stats { display: none; }
+  .main-pad { padding: 28px; }
+  .chat-scroll { padding: 24px; }
+  .chat-input { padding: 14px 24px 20px; }
+  .sys-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- 顶部栏 -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h4l2-5 4 10 2-5h4"/></svg>
+      </div>
+      <div class="brand-text">
+        <div class="bn">CorePulse</div>
+      </div>
+    </div>
+    <div class="status-pill"><span class="dot"></span> 服务正常 <span class="sep">·</span> 已连接</div>
+    <div class="top-right">
+      <div class="top-user"><span class="uname">开发者</span><div class="avatar">J</div></div>
+    </div>
+  </header>
+
+  <div class="body">
+    <!-- 左侧栏 -->
+    <nav class="sidebar chat-mode">
+      <div class="side-nav">
+        <div class="nav-label">导航</div>
+        <button class="nav-item active" data-view="chat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          智能诊断
+        </button>
+        <button class="nav-item" data-view="system">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          系统信息
+        </button>
+        <button class="nav-item" data-view="tools">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.8 2.8-2.2-2.2 2.8-2.8z"/></svg>
+          工具库
+          <span class="nav-badge">3</span>
+        </button>
+        <button class="nav-item" data-view="profile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+          我的
+        </button>
+      </div>
+
+      <div class="side-history">
+        <div class="h-title">历史会话</div>
+        <button class="btn-new">新建会话</button>
+        <input class="h-search" type="text" placeholder="搜索会话…" />
+        <div class="h-item active">显卡压力测试<span class="time">10:24</span></div>
+        <div class="h-item">蓝屏问题排查<span class="time">昨天</span></div>
+        <div class="h-item">C盘空间清理<span class="time">3天前</span></div>
+        <div class="h-item">全面体检报告<span class="time">上周</span></div>
+        <div class="h-foot">共 4 条记录</div>
+      </div>
+
+      <div class="side-foot">
+        <div class="mini-card">
+          <div class="mc-title"><span class="dot"></span>实时状态</div>
+          <div class="mc-row"><span>CPU</span><span>32%</span></div>
+          <div class="mini-meter"><div class="fill" style="width:32%"></div></div>
+          <div class="mc-row"><span>内存</span><span>58%</span></div>
+          <div class="mini-meter"><div class="fill" style="width:58%"></div></div>
+          <div class="mc-row"><span>温度</span><span>54℃</span></div>
+          <div class="mini-meter"><div class="fill amber" style="width:54%"></div></div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <main class="main">
+      <!-- ===== 会话视图 ===== -->
+      <section class="view chat-view active" id="view-chat">
+        <div class="chat-main">
+          <div class="chat-scroll">
+            <div class="msg ai">
+              <div class="bubble">你好，我是 <span class="hl">小脉</span>，你的电脑诊断专家。<br><br>描述一下遇到的问题，例如：<br>「玩游戏时出现蓝屏」或「风扇噪声异常」<br><br>也可以试试：<span class="hl">帮我对显卡进行压力测试</span></div>
+              <div class="meta"><span>小脉</span><span>·</span><span>刚刚</span></div>
+            </div>
+            <div class="msg user">
+              <div class="bubble">帮我对显卡进行压力测试</div>
+              <div class="meta"><span>你</span><span>·</span><span>刚刚</span></div>
+            </div>
+            <div class="msg ai">
+              <div class="bubble">好的，即将对 <span class="hl">RTX 4060</span> 进行 30 分钟压力测试。请确保散热正常，测试开始后我会实时汇报进度。</div>
+              <div class="meta"><span>小脉</span><span>·</span><span>刚刚</span></div>
+              <div class="tool-card">
+                <div class="tc-head"><span class="spinner"></span>显卡压力测试 · FurMark</div>
+                <div class="tc-progress"><div class="fill" style="width:42%"></div></div>
+                <div class="tc-stats"><span>67℃</span><span>89 FPS</span><span>12s</span></div>
+              </div>
+            </div>
+            <div class="msg ai">
+              <div class="bubble thinking">正在分析测试结果<span class="dots"><i></i><i></i><i></i></span></div>
+              <div class="meta"><span>小脉</span><span>·</span><span>正在分析</span></div>
+            </div>
+          </div>
+          <div class="chat-input">
+            <div class="field">
+              <input type="text" placeholder="描述你的问题或输入指令…" />
+              <button class="clear">×</button>
+            </div>
+            <button class="btn-send">发送</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 系统信息视图 ===== -->
+      <section class="view" id="view-system">
+        <div class="main-pad">
+          <div class="page-head">
+            <div class="page-title">系统信息</div>
+            <div class="page-sub">当前设备的硬件配置与实时运行状态</div>
+          </div>
+
+          <div class="card card-pad">
+            <div class="sec-head">
+              <h3>设备配置</h3>
+              <button class="btn btn-ghost" style="padding:6px 13px;font-size:12px;">重新检测</button>
+            </div>
+            <div class="sys-grid">
+              <div class="sys-item"><span class="label">操作系统</span><span class="value">Windows 11 专业版 64位</span></div>
+              <div class="sys-item"><span class="label">处理器</span><span class="value">Intel Core i7-13700K</span></div>
+              <div class="sys-item"><span class="label">内存</span><span class="value">32GB DDR5 6000MHz</span></div>
+              <div class="sys-item"><span class="label">显卡</span><span class="value">NVIDIA RTX 4060 8GB</span></div>
+              <div class="sys-item"><span class="label">主板</span><span class="value">ASUS ROG Strix Z790</span></div>
+              <div class="sys-item"><span class="label">存储</span><span class="value">1TB NVMe SSD</span></div>
+            </div>
+
+            <div class="metrics">
+              <div class="metric"><div class="num">32%</div><div class="lbl">CPU 负载</div></div>
+              <div class="metric"><div class="num">58%</div><div class="lbl">内存使用</div></div>
+              <div class="metric"><div class="num amber">54℃</div><div class="lbl">CPU 温度</div></div>
+              <div class="metric"><div class="num green">健康</div><div class="lbl">磁盘状态</div></div>
+            </div>
+
+            <div class="health-row">
+              <div class="ring"><span class="ring-val">82</span></div>
+              <div class="health-info">
+                <h4>综合健康评分 · 82 / 100</h4>
+                <p>设备整体运行良好。建议更新显卡驱动、清理磁盘缓存以保持最佳性能。系统已连续运行 6 天，建议定期重启。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 工具库视图 ===== -->
+      <section class="view" id="view-tools">
+        <div class="main-pad">
+          <div class="page-head">
+            <div class="page-title">工具库</div>
+            <div class="page-sub">点击「运行」即可单独执行测试，诊断助手会自动读取结果</div>
+          </div>
+
+          <div class="card card-pad ready-card">
+            <div class="ready-head">
+              <div>
+                <h3 style="font-size:15px;font-weight:600;">工具就绪状态</h3>
+                <div class="rh-sub">检测到 1 个工具未安装</div>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-ghost" style="padding:6px 13px;font-size:12px;">刷新</button>
+                <button class="btn btn-primary" style="padding:6px 13px;font-size:12px;">一键准备</button>
+              </div>
+            </div>
+            <div class="ready-row"><span class="ti-status ready"><span class="dot"></span>已就绪</span><span class="rr-name">FurMark 显卡压力测试</span><span class="rr-ver">v1.2</span></div>
+            <div class="ready-row"><span class="ti-status ready"><span class="dot"></span>已就绪</span><span class="rr-name">MemTest 内存诊断</span><span class="rr-ver">v1.0</span></div>
+            <div class="ready-row"><span class="ti-status missing"><span class="dot"></span>未安装</span><span class="rr-name">LibreHardwareMonitor 温度监控</span><span class="rr-ver">需管理员权限</span></div>
+          </div>
+
+          <div class="tools-list">
+            <div class="tool-row">
+              <span class="ti-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
+              <span class="ti-name">显卡压力测试</span>
+              <span class="ti-desc">通过 FurMark 进行 30 分钟烤机，检测显卡稳定性与温度表现</span>
+              <span class="ti-foot"><span class="ti-status ready"><span class="dot"></span>已就绪</span><button class="ti-run">运行</button></span>
+            </div>
+            <div class="tool-row">
+              <span class="ti-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/></svg></span>
+              <span class="ti-name">内存诊断</span>
+              <span class="ti-desc">运行 MemTest 检测内存故障，排查蓝屏、重启等疑难问题</span>
+              <span class="ti-foot"><span class="ti-status ready"><span class="dot"></span>已就绪</span><button class="ti-run">运行</button></span>
+            </div>
+            <div class="tool-row">
+              <span class="ti-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h6"/></svg></span>
+              <span class="ti-name">硬盘健康扫描</span>
+              <span class="ti-desc">读取 SMART 数据，检测硬盘健康状态、坏道与寿命预警</span>
+              <span class="ti-foot"><span class="ti-status ready"><span class="dot"></span>已就绪</span><button class="ti-run">运行</button></span>
+            </div>
+            <div class="tool-row">
+              <span class="ti-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v10a2 2 0 1 1-4 0V4a2 2 0 1 1 4 0z"/><path d="M8 14h8"/></svg></span>
+              <span class="ti-name">CPU 温度监控</span>
+              <span class="ti-desc">实时监控 CPU 温度变化，异常高温及时预警</span>
+              <span class="ti-foot"><span class="ti-status missing"><span class="dot"></span>未安装</span><button class="ti-run">运行</button></span>
+            </div>
+            <div class="tool-row">
+              <span class="ti-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></span>
+              <span class="ti-name">全面体检</span>
+              <span class="ti-desc">一键串联多项检测，生成综合诊断报告，定位潜在问题</span>
+              <span class="ti-foot"><span class="ti-status ready"><span class="dot"></span>已就绪</span><button class="ti-run">运行</button></span>
+            </div>
+            <div class="tool-row">
+              <span class="ti-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-2"/><rect x="9" y="1" width="6" height="4" rx="1"/><path d="M9 13l2 2 4-4"/></svg></span>
+              <span class="ti-name">诊断报告</span>
+              <span class="ti-desc">将检测结果汇总导出为 PDF 报告，方便保存与分享</span>
+              <span class="ti-foot"><span class="ti-status ready"><span class="dot"></span>已就绪</span><button class="ti-run">运行</button></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 我的视图 ===== -->
+      <section class="view" id="view-profile">
+        <div class="main-pad">
+          <div class="page-head">
+            <div class="page-title">我的</div>
+            <div class="page-sub">管理你的账号信息与偏好设置</div>
+          </div>
+
+          <div class="profile-wrap">
+            <div class="profile-main">
+              <div class="card card-pad">
+                <div class="profile-head">
+                  <div class="avatar-lg">J</div>
+                  <div>
+                    <div class="ph-name">开发者</div>
+                    <div class="ph-sub">专业版用户 <span class="tag">已认证</span></div>
+                  </div>
+                </div>
+                <div class="field-row"><span class="fl">账号 ID</span><span class="fv">U_20260918</span></div>
+                <div class="field-row"><span class="fl">邮箱</span><span class="fv">dev@example.com</span></div>
+                <div class="field-row"><span class="fl">API 密钥</span><span class="fv"><span class="mask">sk-••••••••••••4f2a</span><button class="copy-btn">复制</button></span></div>
+                <div class="field-row"><span class="fl">注册时间</span><span class="fv">2026-09-18</span></div>
+                <div class="profile-actions">
+                  <button class="btn btn-primary">偏好设置</button>
+                  <button class="btn btn-danger">退出登录</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="side-stats">
+              <div class="card stat-card">
+                <div class="sc-head"><span class="sc-label">本月诊断次数</span><span class="sc-val">24</span></div>
+                <div class="sc-bar"><div class="fill" style="width:60%"></div></div>
+                <div class="sc-sub">较上月 +12%</div>
+              </div>
+              <div class="card stat-card">
+                <div class="sc-head"><span class="sc-label">诊断报告</span><span class="sc-val">8</span></div>
+                <div class="sc-bar"><div class="fill green" style="width:40%"></div></div>
+                <div class="sc-sub">已生成 8 份报告</div>
+              </div>
+              <div class="card stat-card">
+                <div class="sc-head"><span class="sc-label">存储空间</span><span class="sc-val">1.2TB</span></div>
+                <div class="sc-bar"><div class="fill amber" style="width:72%"></div></div>
+                <div class="sc-sub">已用 72% · 建议清理</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+const navItems = document.querySelectorAll('.nav-item');
+const views = document.querySelectorAll('.view');
+const sidebar = document.querySelector('.sidebar');
+navItems.forEach(item => {
+  item.addEventListener('click', () => {
+    navItems.forEach(n => n.classList.remove('active'));
+    item.classList.add('active');
+    const t = item.dataset.view;
+    sidebar.classList.toggle('chat-mode', t === 'chat');
+    views.forEach(v => { v.classList.remove('active'); v.style.animation = 'none'; });
+    const target = document.getElementById('view-' + t);
+    target.classList.add('active');
+    void target.offsetWidth;
+    target.style.animation = '';
+  });
+});
+const sendBtn = document.querySelector('.btn-send');
+const input = document.querySelector('.chat-input input');
+sendBtn.addEventListener('click', () => {
+  if (!input.value.trim()) return;
+  const scroll = document.querySelector('.chat-scroll');
+  const msg = document.createElement('div');
+  msg.className = 'msg user';
+  msg.innerHTML = '<div class="bubble"></div><div class="meta"><span>你</span><span>·</span><span>刚刚</span></div>';
+  msg.querySelector('.bubble').textContent = input.value;
+  scroll.appendChild(msg);
+  input.value = '';
+  scroll.scrollTop = scroll.scrollHeight;
+});
+input.addEventListener('keydown', e => { if (e.key === 'Enter') sendBtn.click(); });
+</script>
+</body>
+</html>
