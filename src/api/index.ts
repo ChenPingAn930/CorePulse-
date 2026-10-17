@@ -15,6 +15,7 @@ import type {
   PrepareToolsData,
   InstallVcRedistRequest,
   InstallVcRedistData,
+  CommandConfirmedData,
 } from '../types';
 
 /**
@@ -157,4 +158,15 @@ export function installVcRedist(body: InstallVcRedistRequest): Promise<InstallVc
 /** 获取当前用户信息 */
 export function fetchProfile(): Promise<UserProfile> {
   return get<UserProfile>('/api/profile');
+}
+
+/**
+ * 命令确认（用户确认/授权执行某条待确认命令）
+ * 对应 POST /api/Confirmed/{messageid}，路径参数为待确认消息 id。
+ * 注意：该接口无请求体，确认结果由后端返回。
+ */
+export function confirmCommand(messageId: string | number): Promise<CommandConfirmedData> {
+  return post<CommandConfirmedData>(
+    `/api/Confirmed/${encodeURIComponent(String(messageId))}`,
+  );
 }

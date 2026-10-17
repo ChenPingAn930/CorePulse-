@@ -3,8 +3,8 @@ import type { ChatProcessEvent } from '../types';
 /**
  * ===== 聊天 WebSocket 客户端 =====
  * 连接后端 ws://{host}/ws/chat?sessionId={sessionId}，
- * 实时接收对话过程事件（chat_thinking / tool_started / tool_result）
- * 与异步任务事件（tool_progress / tool_finished / confirm_request）。
+ * 实时接收对话过程事件（chat_thinking / tool_started / tool_result / command_confirm）
+ * 与异步任务事件（tool_progress / tool_finished）。
  *
  * 开发环境经 vite 代理 /ws 转发到后端；VITE_API_BASE 为绝对地址时据此推导 ws 地址。
  */
@@ -25,6 +25,11 @@ export interface ChatEventHandlers {
   onToolStarted?: (toolName: string, args: string | null) => void;
   /** 工具执行完成 */
   onToolResult?: (toolName: string, summary: string | null) => void;
+  /**
+   * 命令待确认（后端在工具执行期间落库 PENDING 记录后即时推送）。
+   * messageId 用于去重与后续确认请求，command 为纯命令原文。
+   */
+  onCommandConfirm?: (messageId: number, command: string) => void;
   /** 其他未知事件类型（便于调试） */
   onUnknown?: (event: ChatProcessEvent) => void;
 }
@@ -113,8 +118,14 @@ export class ChatEventSocket {
       case 'tool_result':
         this.handlers.onToolResult?.(event.toolName ?? '', event.summary ?? null);
         break;
+      case 'command_confirm':
+        // messageId 缺失时无法去重/确认，直接忽略
+        if (typeof event.messageId === 'number') {
+          this.handlers.onCommandConfirm?.(event.messageId, event.command ?? '');
+        }
+        break;
       default:
-        // tool_progress / tool_finished / confirm_request 等任务事件暂不在此处理
+        // tool_progress / tool_finished 等任务事件暂不在此处理
         this.handlers.onUnknown?.(event);
         break;
     }

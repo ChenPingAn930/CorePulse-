@@ -53,15 +53,26 @@ export interface SessionMessageParams {
   size?: number;
 }
 
+/** 工具消息执行状态（后端下发） */
+export type ToolMessageStatus = 'PENDING' | 'EXECUTED' | 'REJECTED';
+
 /** 会话消息历史记录（对应后端 /api/sessions/{sessionId}/messages 返回的 list 元素） */
 export interface SessionMessage {
-  /** 消息 id */
+  /** 消息 id（确认卡片以此为 messageId） */
   id: number;
-  /** 消息角色：user 用户输入 / assistant AI 回复 / tool 工具调用结果（中间过程，前端不展示） */
+  /** 消息角色：user 用户输入 / assistant AI 回复 / tool 工具调用记录 */
   role: 'user' | 'assistant' | 'tool';
+  /**
+   * 消息内容。
+   * role=tool 且 toolName=runShellCommand 且 status=PENDING 时，content 为待确认的纯命令原文。
+   */
   content: string;
   /** 关联工具名（可选，如执行了某个工具） */
   toolName?: string;
+  /** 工具消息状态：PENDING 待确认 / EXECUTED 已执行 / REJECTED 已拒绝 */
+  status?: ToolMessageStatus;
+  /** 是否已被用户确认（后端字段，冗余于 status） */
+  confirmed?: boolean;
   /** 关联任务 id（可选） */
   taskId?: number;
   /** 附加扩展字段（可选） */
@@ -83,6 +94,10 @@ export interface ChatMessage {
   time: string;
   /** 附加渲染卡片（如工具运行卡片） */
   tool?: 'stress-test';
+  /** 消息类型标记：confirm-card 命令确认卡片 / tool-command 已执行命令记录 / tool-result 工具输出结果 */
+  kind?: 'confirm-card' | 'tool-command' | 'tool-result';
+  /** 确认卡片对应的后端消息 id（点击确认时作为 messageId 传给 /api/Confirmed/{messageId}） */
+  messageId?: number;
 }
 
 /** 工具库条目 */
@@ -212,11 +227,16 @@ export interface SendMessageResponse {
   taskId?: number | null;
 }
 
+/* ===== 命令确认（POST /api/Confirmed/{messageid}） ===== */
+
+/** 命令确认响应 data：后端返回的确认结果文本 */
+export type CommandConfirmedData = string;
+
 /* ===== WebSocket 对话过程事件（通道 ws://{host}/ws/chat?sessionId=xxx） ===== */
 
 /** 聊天过程推送事件。任务事件(tool_progress 等)字段不同，此处仅约束对话过程事件 */
 export interface ChatProcessEvent {
-  /** chat_thinking / tool_started / tool_result，任务事件为其他值 */
+  /** chat_thinking / tool_started / tool_result / command_confirm，任务事件为其他值 */
   type: string;
   sessionId?: number;
   /** chat_thinking：阶段提示文案 */
@@ -227,4 +247,8 @@ export interface ChatProcessEvent {
   args?: string | null;
   /** tool_result：结果摘要（截断至 200 字符） */
   summary?: string | null;
+  /** command_confirm：待确认消息 id（用于去重与 POST /api/Confirmed/{messageId}） */
+  messageId?: number;
+  /** command_confirm：待确认的纯命令原文 */
+  command?: string;
 }

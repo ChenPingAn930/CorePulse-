@@ -6,6 +6,7 @@ import {
   fetchSessions,
   fetchSessionMessages,
   sendChatMessage,
+  confirmCommand,
 } from '../api';
 import { ChatEventSocket } from '../ws/chatSocket';
 
@@ -249,6 +250,28 @@ export class ChatView {
   }
 
   private messageToHtml(m: ChatMessage): string {
+    // 命令确认卡片：AI 侧展示，等待用户点击确认后执行
+    if (m.kind === 'confirm-card') {
+      return `
+        <div class="msg ai">
+          ${this.confirmCardHtml(m)}
+          <div class="meta"><span>小脉</span> <span>· 待确认</span></div>
+        </div>`;
+    }
+
+    // 已执行的命令记录 / 工具实际输出结果
+    if (m.kind === 'tool-command' || m.kind === 'tool-result') {
+      const label = m.kind === 'tool-command' ? '命令' : '结果';
+      return `
+        <div class="msg tool-record">
+          <div class="tool-record-card ${m.kind}">
+            <div class="tr-label">${label}</div>
+            <pre class="tr-body">${escapeHtml(m.content)}</pre>
+          </div>
+          <div class="meta"><span>${label}</span> <span>· ${escapeHtml(m.time)}</span></div>
+        </div>`;
+    }
+
     const roleLabel = m.role === 'ai' ? '小脉' : '你';
     // AI 回复为 markdown，渲染为 HTML；用户消息为纯文本，转义防注入
     const body =
@@ -260,6 +283,26 @@ export class ChatView {
         ${body}
         ${m.tool === 'stress-test' ? this.stressCardHtml() : ''}
         <div class="meta"><span>${roleLabel}</span> <span>· ${escapeHtml(m.time)}</span></div>
+      </div>`;
+  }
+
+  /**
+   * 命令确认卡片。
+   * content 为后端落库的纯命令原文，直接展示；messageId 即后端消息 id。
+   */
+  private confirmCardHtml(m: ChatMessage): string {
+    const messageId = m.messageId ?? 0;
+    return `
+      <div class="confirm-card" data-message-id="${messageId}">
+        <div class="cc-header">
+          <span class="cc-badge">待确认</span>
+          <span class="cc-title">请求执行终端命令</span>
+        </div>
+        <pre class="cc-command">${escapeHtml(m.content)}</pre>
+        <div class="cc-actions">
+          <button class="cc-btn cc-confirm" data-message-id="${messageId}">确认执行</button>
+          <span class="cc-hint">执行可能需要数十秒，请勿重复点击</span>
+        </div>
       </div>`;
   }
 
@@ -346,6 +389,99 @@ export class ChatView {
         this.loadMoreSessions();
       }
     });
+
+    // 命令确认卡片：事件委托绑定在消息容器上，兼容动态插入的卡片
+    this.getEl('messageContainer').addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest('.cc-confirm') as HTMLButtonElement | null;
+      if (!btn) return;
+      const messageId = Number(btn.dataset.messageId);
+      if (!Number.isFinite(messageId) || messageId <= 0) return;
+      this.handleConfirm(messageId, btn);
+    });
+  }
+
+  /**
+   * 插入/更新命令确认卡片（按 messageId 去重）。
+   *
+   * 去重必要性：WS 推送 command_confirm 时先渲染一次卡片；这一轮 HTTP 返回后
+   * 前端会刷新消息列表，同一条 PENDING 记录会被再查出来一次，若不去重会弹两张卡片。
+   * 因此以 messageId 为唯一键：已存在则只更新命令文本，不重复插入。
+   */
+  private upsertConfirmCard(messageId: number, command: string): void {
+    if (!Number.isFinite(messageId) || messageId <= 0) return;
+
+    const container = this.getEl('messageContainer');
+    const existing = container.querySelector(
+      `.confirm-card[data-message-id="${messageId}"]`,
+    ) as HTMLElement | null;
+
+    if (existing) {
+      // 已渲染过：仅同步命令文本，避免重复卡片
+      const pre = existing.querySelector('.cc-command');
+      if (pre && command && pre.textContent !== command) pre.textContent = command;
+      // 同步内部状态，保证刷新消息列表时同 id 记录能正确合并
+      const msg = this.messages.find((m) => m.kind === 'confirm-card' && m.messageId === messageId);
+      if (msg) msg.content = command;
+      return;
+    }
+
+    const card: ChatMessage = {
+      id: `confirm-${messageId}`,
+      role: 'ai',
+      content: command,
+      time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+      kind: 'confirm-card',
+      messageId,
+    };
+    this.messages.push(card);
+
+    const div = document.createElement('div');
+    div.innerHTML = this.messageToHtml(card);
+    container.appendChild(div.firstElementChild as HTMLElement);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  /**
+   * 处理命令确认：调用 POST /api/Confirmed/{messageId}。
+   *
+   * 该接口是同步的，会等完一整轮 LLM 调用（可能数十秒），因此：
+   *  - 点击后按钮进入 loading 并禁用，避免重复请求（后端虽幂等，前端仍需拦截）；
+   *  - 完成后重新拉取消息列表，该条 status 会变为 EXECUTED，
+   *    并新增一条工具输出记录（分别显示「命令」与「结果」）。
+   */
+  private async handleConfirm(messageId: number, btn: HTMLButtonElement): Promise<void> {
+    // 防重复点击：已在请求中或按钮已禁用则直接忽略
+    if (btn.disabled || btn.classList.contains('loading')) return;
+
+    const originalText = btn.textContent ?? '确认执行';
+    btn.disabled = true;
+    btn.classList.add('loading');
+    btn.textContent = '执行中...';
+
+    const card = btn.closest('.confirm-card') as HTMLElement | null;
+    card?.classList.add('submitting');
+
+    try {
+      // 接口返回的 data 是给用户看的回复文本
+      const reply = await confirmCommand(messageId);
+      if (reply) {
+        this.addMessage('ai', reply);
+      }
+    } catch (e) {
+      console.error('[chat] confirmCommand failed:', e);
+      // 失败时恢复按钮，允许用户重试
+      btn.disabled = false;
+      btn.classList.remove('loading');
+      btn.textContent = originalText;
+      card?.classList.remove('submitting');
+      window.alert('确认失败，请稍后重试。');
+      return;
+    }
+
+    // 刷新后该条 status 变为 EXECUTED，同时出现工具输出结果
+    if (this.currentSessionId) {
+      await this.loadSessionMessages(this.currentSessionId);
+    }
   }
 
   /** 加载指定会话的消息历史（GET /api/sessions/{sessionId}/messages） */
@@ -363,9 +499,11 @@ export class ChatView {
 
     try {
       const data = await fetchSessionMessages(sessionId, { page: 1, size: 50 });
-      // 过滤工具调用结果（role === 'tool'）：这是 function calling 的中间过程数据，
-      // 内容多为原始 JSON，不作为独立气泡展示。历史仅保留用户输入与 AI 最终回复。
-      const list = (data?.list ?? []).filter((m) => m.role !== 'tool');
+      // tool 消息不再整体过滤：
+      //  - status=PENDING 且 toolName=runShellCommand → 渲染为「命令确认卡片」
+      //  - 其余 tool 消息 → 渲染为「命令」记录或「结果」输出（toChatMessage 内区分）
+      // 判断一律依据后端下发的 status / toolName 字段，不从文本内容推断。
+      const list = data?.list ?? [];
       this.messages =
         list.length > 0
           ? list.map((m) => this.toChatMessage(m))
@@ -391,14 +529,45 @@ export class ChatView {
     this.renderMessages();
   }
 
-  /** 把后端消息记录转换为前端渲染用的 ChatMessage（tool 消息已在上游过滤） */
+  /**
+   * 把后端消息记录转换为前端渲染用的 ChatMessage。
+   *
+   * tool 消息的分类完全依据后端字段（status / toolName），不做文本判断：
+   *  - role=tool && toolName=runShellCommand && status=PENDING → 命令确认卡片
+   *  - role=tool && toolName=runShellCommand（其余状态，如 EXECUTED）→ 命令记录
+   *  - role=tool（其他工具）→ 工具输出结果
+   */
   private toChatMessage(m: SessionMessage): ChatMessage {
-    return {
+    const base = {
       id: String(m.id),
+      time: m.createdAt,
+    };
+
+    if (m.role === 'tool') {
+      const isShell = m.toolName === 'runShellCommand';
+      if (isShell && m.status === 'PENDING') {
+        return {
+          ...base,
+          role: 'ai',
+          content: m.content,
+          kind: 'confirm-card',
+          // m.id 即确认接口所需的 messageId，无需从文本中提取
+          messageId: m.id,
+        };
+      }
+      return {
+        ...base,
+        role: 'ai',
+        content: m.content,
+        kind: isShell ? 'tool-command' : 'tool-result',
+      };
+    }
+
+    return {
+      ...base,
       // 后端 assistant 对应前端 ai 气泡；user 保持不变
       role: m.role === 'user' ? 'user' : 'ai',
       content: m.content,
-      time: m.createdAt,
     };
   }
 
@@ -528,6 +697,10 @@ export class ChatView {
       },
       onToolResult: (toolName) => {
         this.updateThinking(`${toolDisplayName(toolName)} 执行完成，正在分析结果`);
+      },
+      onCommandConfirm: (messageId, command) => {
+        // 不必等 HTTP 响应与消息列表刷新，直接按 WS 事件渲染确认卡片
+        this.upsertConfirmCard(messageId, command);
       },
     });
     if (this.chatSocket.connectedSessionId === sessionId) return;

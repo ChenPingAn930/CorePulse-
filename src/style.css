@@ -459,6 +459,62 @@ body {
   font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace; letter-spacing: -0.01em;
 }
 
+/* 命令确认卡片 */
+.confirm-card {
+  width: 100%; max-width: 420px; padding: 16px 18px;
+  border-radius: 4px 14px 14px 4px;
+  background: var(--bubble-ai); border: 1px solid var(--accent-line);
+  border-left: 2px solid var(--accent);
+  box-shadow: var(--shadow-card);
+  transition: opacity var(--dur-fast) var(--ease);
+}
+.confirm-card.submitting { opacity: 0.7; }
+.confirm-card .cc-header { display: flex; align-items: center; gap: 8px; }
+.confirm-card .cc-badge {
+  font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 6px;
+  background: var(--warning-soft); color: var(--warning);
+  border: 1px solid rgba(252, 211, 77, 0.25);
+}
+.confirm-card .cc-title { font-size: 13px; font-weight: 600; color: var(--text-1); }
+.confirm-card .cc-command {
+  margin-top: 12px; padding: 12px 14px; border-radius: var(--r-sm);
+  background: var(--inset); border: 1px solid var(--line);
+  color: var(--text-1); font-size: 12.5px; line-height: 1.6;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+  white-space: pre-wrap; word-break: break-all; overflow-x: auto;
+}
+.confirm-card .cc-actions { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+.confirm-card .cc-btn {
+  padding: 8px 18px; border-radius: var(--r-md); border: none; cursor: pointer;
+  font-size: 13px; font-weight: 600;
+  transition: all var(--dur-fast) var(--ease);
+}
+.confirm-card .cc-confirm {
+  background: var(--accent-grad); color: var(--accent-ink); box-shadow: var(--shadow-btn);
+}
+.confirm-card .cc-confirm:hover { filter: brightness(1.08); }
+.confirm-card .cc-confirm:active { filter: brightness(0.95); transform: translateY(1px); }
+.confirm-card .cc-confirm:disabled { opacity: 0.5; cursor: not-allowed; filter: none; transform: none; }
+.confirm-card .cc-hint { font-size: 11px; color: var(--text-4); }
+
+/* 工具记录卡片（命令原文 / 执行结果） */
+.chat-messages .msg.tool-record { align-items: flex-start; align-self: flex-start; max-width: 70%; }
+.tool-record-card {
+  width: 100%; padding: 12px 14px; border-radius: var(--r-md);
+  background: var(--overlay); border: 1px solid var(--line);
+}
+.tool-record-card .tr-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+  color: var(--text-3); text-transform: uppercase;
+}
+.tool-record-card.tool-command .tr-label { color: var(--accent); }
+.tool-record-card .tr-body {
+  margin-top: 8px; font-size: 12.5px; line-height: 1.6; color: var(--text-2);
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+  white-space: pre-wrap; word-break: break-all; max-height: 320px; overflow: auto;
+}
+.tool-record-card.tool-command .tr-body { color: var(--text-1); }
+
 /* 输入区 */
 .chat-input-area {
   flex-shrink: 0; padding: 16px 40px 24px;
